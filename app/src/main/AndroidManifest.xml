@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="net.imknown.getlocation" >
+<manifest package="net.imknown.getlocation"
+          xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!--<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>-->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <!--<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>-->
     <!--<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>-->
@@ -11,7 +11,7 @@
 
     <application
         android:icon="@drawable/ic_launcher"
-        android:label="GPS 测试 v4">
+        android:label="安卓原生SDK定位Demo">
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
