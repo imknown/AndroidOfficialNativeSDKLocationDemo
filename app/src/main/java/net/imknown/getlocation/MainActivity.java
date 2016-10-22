@@ -17,7 +17,6 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -33,13 +32,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class MainActivity extends Activity implements LocationListener {
-    private Spinner options;
-
     private CheckBox showMore;
-
-    private Button start;
-    private Button stop;
-    private Button clear;
 
     private TextView text;
 
@@ -52,22 +45,22 @@ public class MainActivity extends Activity implements LocationListener {
 
     private DateFormat df = new SimpleDateFormat("HH:mm:ss.SSS", Locale.CHINA);
 
+    private PermissionHelper mPermissionHelper;
+
+    private static final int PERMISSION_ACCESS_LOCATION = 0;
+
+    private String provider;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        options = (Spinner) findViewById(R.id.options);
-
         showMore = (CheckBox) findViewById(R.id.showMore);
-
-        start = (Button) findViewById(R.id.start);
-        stop = (Button) findViewById(R.id.stop);
-        clear = (Button) findViewById(R.id.clear);
 
         text = (TextView) findViewById(R.id.text);
 
-        options.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        ((Spinner) findViewById(R.id.options)).setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 MainActivity.this.selectedPosition = position;
@@ -78,7 +71,7 @@ public class MainActivity extends Activity implements LocationListener {
             }
         });
 
-        start.setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.start).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 switch (selectedPosition) {
@@ -94,14 +87,14 @@ public class MainActivity extends Activity implements LocationListener {
             }
         });
 
-        stop.setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.stop).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 stop();
             }
         });
 
-        clear.setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.clear).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 text.setText(null);
@@ -113,23 +106,19 @@ public class MainActivity extends Activity implements LocationListener {
         mPermissionHelper = new PermissionHelper(this);
     }
 
-    //权限检测类
-    private PermissionHelper mPermissionHelper;
-
-    private static final int PERMISSION_ACCESS_FINE_LOCATION = 0;
-
-    private String provider;
-
     private void tryToLocation() {
         print("正在尝试 " + provider + " provider 定位");
 
-        if (!mPermissionHelper.hasPermissions(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) {
-            mPermissionHelper.requestPermissions(Manifest.permission.ACCESS_FINE_LOCATION, PERMISSION_ACCESS_FINE_LOCATION, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    showInterrupted();
-                }
-            });
+        if (!mPermissionHelper.hasPermissions(Manifest.permission.ACCESS_FINE_LOCATION)) {
+            mPermissionHelper.requestPermissions(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    PERMISSION_ACCESS_LOCATION,
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            showInterrupted();
+                        }
+                    });
         } else {
             doLocation();
         }
@@ -142,20 +131,16 @@ public class MainActivity extends Activity implements LocationListener {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
-            case PERMISSION_ACCESS_FINE_LOCATION: {
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            case PERMISSION_ACCESS_LOCATION: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                        && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                     doLocation();
                 } else {
-                    // 权限未被用户允许
-                    goError("请重新授予 " + provider + " provider 权限");
+                    goError("请务必授予 " + provider + " provider 权限");
 
                     if (!ActivityCompat.shouldShowRequestPermissionRationale(this, permissions[0])) {
-                        mPermissionHelper.showMissingPermissionDialog(new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                print("已取消");
-                            }
-                        });
+                        mPermissionHelper.showMissingPermissionDialog();
                     }
 
                     break;
@@ -169,7 +154,7 @@ public class MainActivity extends Activity implements LocationListener {
 
         if (!locationManager.isProviderEnabled(provider)) {
             startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-            goError("无法定位, 请打开 " + provider + " provider");
+            goError("请打开 " + provider + " provider, 无法定位");
             return;
         }
 

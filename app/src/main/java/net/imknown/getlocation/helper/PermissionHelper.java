@@ -11,6 +11,10 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 
+/**
+ * 参考自
+ * http://blog.csdn.net/u011068996/article/details/50602100
+ */
 public class PermissionHelper {
 
     private Activity mActivity;
@@ -36,67 +40,54 @@ public class PermissionHelper {
     }
 
     public void requestPermissions(String permission, int resultCode, @NonNull final DialogInterface.OnClickListener listener) {
-//        if (ActivityCompat.shouldShowRequestPermissionRationale(mActivity, permission)) {
-//            // 至少拒绝过一次, 但是没有选择 "不再提醒"
-//        } else {
-//            ActivityCompat.requestPermissions(mActivity, new String[]{permission}, resultCode);
-//        }
-
-        showWhyNeedPermissionDialog(permission, resultCode, listener);
+        if (ActivityCompat.shouldShowRequestPermissionRationale(mActivity, permission)) {
+            // 至少拒绝过一次, 但是没有选择 "不再提醒"
+            showWhyNeedPermissionDialog(permission, resultCode, listener);
+        } else {
+            ActivityCompat.requestPermissions(mActivity, new String[]{permission}, resultCode);
+        }
     }
 
     private void showWhyNeedPermissionDialog(final String permission, final int resultCode, @NonNull final DialogInterface.OnClickListener listener) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-        final AlertDialog alertDialog = builder.create();
-
-        builder.setMessage("不给权限的话, 就没法定位~");
-
-        builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+        showDialog("您之前至少拒绝过一次, 但是不给权限的话, 就没法定位了~", "现在定位", new DialogInterface.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
-                alertDialog.dismiss();
+            public void onClick(DialogInterface dialogInterface, int which) {
+                dialogInterface.dismiss();
 
-                listener.onClick(dialog, which);
+                switch (which) {
+                    case DialogInterface.BUTTON_NEGATIVE:
+                        listener.onClick(dialogInterface, which);
+                        break;
+                    case DialogInterface.BUTTON_POSITIVE:
+                        ActivityCompat.requestPermissions(mActivity, new String[]{permission}, resultCode);
+                        break;
+                }
             }
         });
-
-        builder.setPositiveButton("朕知道了", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                alertDialog.dismiss();
-
-                ActivityCompat.requestPermissions(mActivity, new String[]{permission}, resultCode);
-            }
-        });
-
-        builder.show();
     }
 
-    public void showMissingPermissionDialog(@NonNull final DialogInterface.OnClickListener listener) {
+    public void showMissingPermissionDialog() {
+        showDialog("您已经彻底拒绝, 请手动授予权限~", "现在设置", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int which) {
+                dialogInterface.dismiss();
+
+                switch (which) {
+                    case DialogInterface.BUTTON_NEGATIVE:
+                        break;
+                    case DialogInterface.BUTTON_POSITIVE:
+                        startAppSettings();
+                        break;
+                }
+            }
+        });
+    }
+
+    private void showDialog(String msg, String positiveMsg, DialogInterface.OnClickListener listener) {
         AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-        final AlertDialog alertDialog = builder.create();
-
-        builder.setMessage("当前应用缺少必要权限\n请打开所需权限");
-
-        builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                alertDialog.dismiss();
-
-                listener.onClick(dialog, which);
-            }
-        });
-
-        builder.setPositiveButton("设置", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                alertDialog.dismiss();
-                startAppSettings();
-
-                listener.onClick(dialog, which);
-            }
-        });
-
+        builder.setMessage(msg);
+        builder.setNegativeButton(android.R.string.cancel, listener);
+        builder.setPositiveButton(positiveMsg, listener);
         builder.show();
     }
 
