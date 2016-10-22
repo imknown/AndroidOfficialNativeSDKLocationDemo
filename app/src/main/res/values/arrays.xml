@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <array name="options">
+        <item>GPS</item>
+        <item>网络</item>
+    </array>
+
+</resources>

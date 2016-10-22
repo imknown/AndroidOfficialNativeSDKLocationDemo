@@ -1,0 +1,28 @@
+apply plugin: 'com.android.application'
+
+android {
+    def version_code = 1
+    def version_name = "1.0"
+
+    compileSdkVersion 25
+    buildToolsVersion "25"
+
+    defaultConfig {
+        applicationId "net.imknown.getlocation"
+        minSdkVersion 15
+        targetSdkVersion 25
+        versionCode version_code
+        versionName version_name
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    return void
+}
+dependencies {
+    compile 'com.android.support:support-v4:25.0.0'
+}
